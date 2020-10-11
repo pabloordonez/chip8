@@ -2,7 +2,6 @@
 Making a chip 8 interpreter to test vm concepts, practicing before
 starting a bigger emulation project.
 
-
 Instruction Set
 ```
 0nnn - SYS addr
