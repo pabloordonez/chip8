@@ -1,3 +1,10 @@
+extern crate sdl2; 
+
+use sdl2::pixels::Color;
+use sdl2::event::Event;
+use sdl2::keyboard::Keycode;
+use std::time::Duration;
+
 struct Chip8 {
     memory: [u8; 4096],
     program_counter: u16,
@@ -12,7 +19,7 @@ struct Chip8 {
 }
 
 impl Chip8 {
-    pub fn new() -> Chip8 {
+    pub fn new() -> Self {
         Chip8 {
             memory: [0; 4096],
             program_counter: 0,
@@ -34,7 +41,7 @@ impl Chip8 {
         let nnn = op_code & 0x0FFF;
         let kk = (op_code & 0x00FF) as u8;
 
-        match (op1, op2, op3, op4) {        
+        match (op1, op2, op3, op4) {
             (0x00, 0x00, 0x0E, 0x00) => self.op_cls(),
             (0x00, 0x00, 0x0E, 0x0E) => self.op_ret(),
             (0x00, _, _, _) => self.op_sys_nnn(nnn),
@@ -328,7 +335,7 @@ struct Gpu {
 }
 
 impl Gpu {
-    pub fn new() -> Gpu {
+    pub fn new() -> Self {
         Gpu { memory: [0; 256] }
     }
 
@@ -346,7 +353,7 @@ struct Keyboard {
 }
 
 impl Keyboard {
-    pub fn new() -> Keyboard {
+    pub fn new() -> Self {
         Keyboard { memory: 0u16 }
     }
 
@@ -372,4 +379,39 @@ impl Keyboard {
 fn main() {
     let mut chip = Chip8::new();
     chip.execute_op(0x00000E00);
+
+    let sdl_context = sdl2::init().unwrap();
+    let video_subsystem = sdl_context.video().unwrap();
+ 
+    let window = video_subsystem.window("rust-sdl2 demo", 800, 600)
+        .position_centered()
+        .build()
+        .unwrap();
+ 
+    let mut canvas = window.into_canvas().build().unwrap();
+ 
+    canvas.set_draw_color(Color::RGB(0, 255, 255));
+    canvas.clear();
+    canvas.present();
+    let mut event_pump = sdl_context.event_pump().unwrap();
+    let mut i = 0;
+    'running: loop {
+        i = (i + 1) % 255;
+        canvas.set_draw_color(Color::RGB(i, 64, 255 - i));
+        canvas.clear();
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit {..} |
+                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
+                    break 'running
+                },
+                _ => {}
+            }
+        }
+        // The rest of the game loop goes here...
+
+        canvas.present();
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+    }
 }
+
