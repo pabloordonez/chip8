@@ -1,8 +1,10 @@
-extern crate sdl2; 
+extern crate sdl2;
 
-use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::pixels::Color;
+use std::fs::File;
+use std::io::Read;
 use std::time::Duration;
 
 struct Chip8 {
@@ -33,6 +35,55 @@ impl Chip8 {
             keyboard: Keyboard::new(),
         }
     }
+
+    pub fn load_rom(&mut self, file_name: String) -> Result<(), String> {
+        let file = &mut match File::open(file_name) {
+            Ok(file) => file,
+            Err(_) => return Err(format!("Unable to open the file.")),
+        };
+
+        let mut buffer: Vec<u8> = Vec::new();
+        let memory_start = 0x200;
+
+        match file.read_to_end(&mut buffer) {
+            Err(_) => return Err(format!("Unable to read the file.")),
+            Ok(_) => (),
+        }
+
+        println!("Setting up the fonts...");
+
+        for i in 0..FONT_SET.len() {
+            self.memory[i] = FONT_SET[i];
+        }
+
+        println!("Reading rom...");
+
+        for i in 0..buffer.len() {
+            self.memory[memory_start + i] = buffer[i];
+        }
+
+        println!("Disassembling...");
+
+        let mut i = memory_start;
+
+        loop {
+            if i > self.memory.len() / 2 {
+                break;
+            }
+            let high = self.memory[i] as u16;
+            let low = self.memory[i + 1] as u16;
+            let op_code = low | high << 8;
+
+            if op_code != 0 {
+                let str_line = self.disassemble(op_code);
+                println!("{:04X} [{:04X}]: {}", i, op_code, str_line);
+            }
+            i += 2;
+        }
+
+        Ok(())
+    }
+
     pub fn execute_op(&mut self, op_code: u16) {
         let op1 = ((op_code & 0xF000) >> 12) as u8;
         let op2 = ((op_code & 0x0F00) >> 8) as u8;
@@ -81,6 +132,54 @@ impl Chip8 {
             (0x0F, _, 0x05, 0x05) => self.op_ld_i_vx(op2),
             (0x0F, _, 0x06, 0x05) => self.op_ld_vx_i(op2),
             (_, _, _, _) => (),
+        }
+    }
+
+    pub fn disassemble(&self, op_code: u16) -> String {
+        let op1 = ((op_code & 0xF000) >> 12) as u8;
+        let op2 = ((op_code & 0x0F00) >> 8) as u8;
+        let op3 = ((op_code & 0x00F0) >> 4) as u8;
+        let op4 = (op_code & 0x000F) as u8;
+        let nnn = op_code & 0x0FFF;
+        let kk = (op_code & 0x00FF) as u8;
+
+        match (op1, op2, op3, op4) {
+            (0x00, 0x00, 0x0E, 0x00) => String::from("CLS"),
+            (0x00, 0x00, 0x0E, 0x0E) => String::from("RET"),
+            (0x00, _, _, _) => format!("SYS  {:X}", nnn),
+            (0x01, _, _, _) => format!("JMP  {:X}", nnn),
+            (0x02, _, _, _) => format!("CALL {:X}", nnn),
+            (0x03, _, _, _) => format!("SE   V{:X}, {:X}", op2, kk),
+            (0x04, _, _, _) => format!("SNE  V{:X}, {:X}", op2, kk),
+            (0x05, _, _, 0x00) => format!("SE   V{:X}, V{:X}", op2, op3),
+            (0x06, _, _, _) => format!("LD   V{:X}, {:X}", op2, kk),
+            (0x07, _, _, _) => format!("ADD  V{:X}, {:X}", op2, kk),
+            (0x08, _, _, 0x00) => format!("LD   V{:X}, V{:X}", op2, op3),
+            (0x08, _, _, 0x01) => format!("OR   V{:X}, V{:X}", op2, op3),
+            (0x08, _, _, 0x02) => format!("AND  V{:X}, V{:X}", op2, op3),
+            (0x08, _, _, 0x03) => format!("XOR  V{:X}, V{:X}", op2, op3),
+            (0x08, _, _, 0x04) => format!("ADD  V{:X}, V{:X}", op2, op3),
+            (0x08, _, _, 0x05) => format!("SUB  V{:X}, V{:X}", op2, op3),
+            (0x08, _, _, 0x06) => format!("SHR  V{:X}", op2),
+            (0x08, _, _, 0x07) => format!("SUBN V{:X}, V{:X}", op2, op3),
+            (0x08, _, _, 0x0E) => format!("SHL  V{:X}", op2),
+            (0x09, _, _, 0x00) => format!("SNE  V{:X}, V{:X}", op2, op3),
+            (0x0A, _, _, _) => format!("LD   I, {:X}", nnn),
+            (0x0B, _, _, _) => format!("JMP  V0, {:X}", nnn),
+            (0x0C, _, _, _) => format!("RND  V{:X}, {:X}", op2, kk),
+            (0x0D, _, _, _) => format!("DRW  V{:X}, V{:X}, {:X}", op2, op3, op4),
+            (0x0E, _, 0x09, 0x0E) => format!("SKP  V{:X}", op2),
+            (0x0E, _, 0x0A, 0x01) => format!("SKPN V{:X}", op2),
+            (0x0F, _, 0x00, 0x07) => format!("LD   V{:X}, DT", op2),
+            (0x0F, _, 0x00, 0x0A) => format!("LD   V{:X}, KEY", op2),
+            (0x0F, _, 0x01, 0x05) => format!("LD   DT, V{:X}", op2),
+            (0x0F, _, 0x01, 0x08) => format!("LD   ST, V{:X}", op2),
+            (0x0F, _, 0x01, 0x0E) => format!("ADD  I, V{:X}", op2),
+            (0x0F, _, 0x02, 0x09) => format!("LD   F, V{:X}", op2),
+            (0x0F, _, 0x03, 0x03) => format!("LD   B, V{:X}", op2),
+            (0x0F, _, 0x05, 0x05) => format!("LD   [I], V{:X}", op2),
+            (0x0F, _, 0x06, 0x05) => format!("LD   V{:X}, [I]", op2),
+            (_, _, _, _) => String::from("-- Unknown --"),
         }
     }
 
@@ -334,6 +433,14 @@ struct Gpu {
     memory: [u8; 256],
 }
 
+const FONT_SET: [u8; 80] = [
+    0xf0, 0x90, 0x90, 0x90, 0xf0, 0x20, 0x60, 0x20, 0x20, 0x70, 0xf0, 0x10, 0xf0, 0x80, 0xf0, 0xf0,
+    0x10, 0xf0, 0x10, 0xf0, 0x90, 0x90, 0xf0, 0x10, 0x10, 0xf0, 0x80, 0xf0, 0x10, 0xf0, 0xf0, 0x80,
+    0xf0, 0x90, 0xf0, 0xf0, 0x10, 0x20, 0x40, 0x40, 0xf0, 0x90, 0xf0, 0x90, 0xf0, 0xf0, 0x90, 0xf0,
+    0x10, 0xf0, 0xf0, 0x90, 0xf0, 0x90, 0x90, 0xe0, 0x90, 0xe0, 0x90, 0xe0, 0xf0, 0x80, 0x80, 0x80,
+    0xf0, 0xe0, 0x90, 0x90, 0x90, 0xe0, 0xf0, 0x80, 0xf0, 0x80, 0xf0, 0xf0, 0x80, 0xf0, 0x80, 0x80,
+];
+
 impl Gpu {
     pub fn new() -> Self {
         Gpu { memory: [0; 256] }
@@ -376,42 +483,77 @@ impl Keyboard {
     }
 }
 
-fn main() {
+struct Window {
+    sdl_context: sdl2::Sdl,
+    canvas: sdl2::render::Canvas<sdl2::video::Window>,
+}
+
+impl Window {
+    pub fn new() -> Result<Self, String> {
+        let sdl_context = sdl2::init()?;
+        let video_subsystem = sdl_context.video()?;
+        let window = match video_subsystem
+            .window("rust-sdl2 demo", 800, 600)
+            .position_centered()
+            .build()
+        {
+            Ok(window) => window,
+            Err(_) => return Err(String::from("Unable to create the window")),
+        };
+
+        let canvas = match window.into_canvas().build() {
+            Ok(canvas) => canvas,
+            Err(_) => return Err(String::from("Unable to build the canvas.")),
+        };
+
+        Ok(Window {
+            sdl_context,
+            canvas,
+        })
+    }
+
+    pub fn init_screen(&mut self) {
+        self.canvas.set_draw_color(Color::RGB(0, 255, 255));
+        self.canvas.clear();
+        self.canvas.present();
+    }
+
+    pub fn get_event_listener(&self) -> Result<sdl2::EventPump, String> {
+        self.sdl_context.event_pump()
+    }
+}
+
+fn main() -> Result<(), String> {
     let mut chip = Chip8::new();
+    chip.load_rom(String::from("./roms/CONNECT4"))?;
     chip.execute_op(0x00000E00);
 
-    let sdl_context = sdl2::init().unwrap();
-    let video_subsystem = sdl_context.video().unwrap();
- 
-    let window = video_subsystem.window("rust-sdl2 demo", 800, 600)
-        .position_centered()
-        .build()
-        .unwrap();
- 
-    let mut canvas = window.into_canvas().build().unwrap();
- 
-    canvas.set_draw_color(Color::RGB(0, 255, 255));
-    canvas.clear();
-    canvas.present();
-    let mut event_pump = sdl_context.event_pump().unwrap();
+    let window = &mut Window::new()?;
+    window.init_screen();
+
+    let mut event_pump = window.get_event_listener()?;
     let mut i = 0;
+
     'running: loop {
         i = (i + 1) % 255;
-        canvas.set_draw_color(Color::RGB(i, 64, 255 - i));
-        canvas.clear();
+        window.canvas.set_draw_color(Color::RGB(i, 64, 255 - i));
+        window.canvas.clear();
+
         for event in event_pump.poll_iter() {
             match event {
-                Event::Quit {..} |
-                Event::KeyDown { keycode: Some(Keycode::Escape), .. } => {
-                    break 'running
-                },
+                Event::Quit { .. }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Escape),
+                    ..
+                } => break 'running,
                 _ => {}
             }
         }
         // The rest of the game loop goes here...
 
-        canvas.present();
+        window.canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
-}
 
+    Ok(())
+}
