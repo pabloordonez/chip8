@@ -3,6 +3,8 @@
 #define WIDTH 1024
 #define HEIGHT 720
 #define FPS 60
+#define ROM  "../roms/BRIX"
+bool running = false;
 
 void draw_instructions(char **instructions, const u32 instruction_count, const Cpu *cpu)
 {
@@ -52,8 +54,7 @@ void draw_cpu_state(Cpu *cpu)
     DrawText(buffer, sx, sy + y, font_size, GRAY);
     y += 25;
 
-    const u16 current_instruction_index = cpu_get_instruction_pointer_index(cpu);
-    sprintf(buffer, "PC: %X", /*cpu->program_counter*/ current_instruction_index);
+    sprintf(buffer, "PC: %X", cpu->program_counter);
     DrawText(buffer, sx, sy + y, font_size, GRAY);
     y += 25;
 
@@ -109,13 +110,53 @@ void draw_cpu_state(Cpu *cpu)
     }
 }
 
+void check_input(Cpu *cpu)
+{
+    if (IsKeyPressed(KEY_F10) && !running)
+        cpu_clock(cpu);
+
+  if (IsKeyDown(KEY_F11) && !running)
+        cpu_clock(cpu);
+
+    if (IsKeyPressed(KEY_F5))
+        running = !running;
+
+    if (IsKeyPressed(KEY_F8))
+       cpu_load_rom(cpu, ROM);
+
+    if (running)
+    {
+        for (u8 i = 0; i < 10; i++)
+        {
+            cpu_clock(cpu);
+        }
+    }
+}
+
+void draw_gpu(Cpu *cpu)
+{
+    const i32 sx = 10;
+    const i32 sy = 30;
+    const i32 w = 10;
+    const i32 h = 10;
+
+    for (u8 y = 0; y < GPU_SCREEN_HEIGHT; y++)
+    {
+        for (u8 x = 0; x < GPU_SCREEN_WIDTH; x++)
+        {
+            u16 index = y * GPU_SCREEN_WIDTH + x;
+            u8 value = cpu->gpu.memory[index];
+            DrawRectangle((x * (w + 1)) + sx, (y * (h + 1)) + sy, w, h, value == 0 ? WHITE : BLACK);
+        }
+    }
+}
+
 int main()
 {
     Cpu cpu;
     char **instructions = NULL;
-    bool running = false;
 
-    cpu_load_rom(&cpu, "../roms/CONNECT4");
+    cpu_load_rom(&cpu, ROM);
     u32 instruction_count = cpu_disassemble_code(&cpu, &instructions);
 
     InitWindow(WIDTH, HEIGHT, "Chip 8");
@@ -123,26 +164,13 @@ int main()
 
     while (!WindowShouldClose())
     {
-        if (IsKeyPressed(KEY_F10) && !running)
-        {
-            cpu_clock(&cpu);
-        }
-
-        if (IsKeyPressed(KEY_F5))
-        {
-            running = !running;
-        }
-
-        if (running)
-        {
-            cpu_clock(&cpu);
-        }
-
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
+        check_input(&cpu);
         draw_cpu_state(&cpu);
         draw_instructions(instructions, instruction_count, &cpu);
+        draw_gpu(&cpu);
 
         DrawFPS(10, 10);
         EndDrawing();

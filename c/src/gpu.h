@@ -2,7 +2,12 @@
 #define __GPU_H__
 
 #include <string.h>
+#include <math.h>
 #include "types.h"
+
+
+#define GPU_SCREEN_WIDTH 64
+#define GPU_SCREEN_HEIGHT 32
 
 /**
  * Defines a gpu device.
@@ -10,13 +15,11 @@
  */
 typedef struct Gpu
 {
-    u8 memory[256];
+    u8 memory[GPU_SCREEN_WIDTH * GPU_SCREEN_HEIGHT];
 } Gpu;
 
 void gpu_reset(Gpu *gpu);
 
-void gpu_clear_memory(Gpu *gpu);
-
-bool gpu_draw_sprite(Gpu *gpu, u8 x, u8 y, const u8 *memory, u8 from, u8 length);
+bool gpu_draw_sprite(Gpu *gpu, u8 x, u8 y, const u8 *memory, u16 index_from, u8 length);
 
 #endif /*__GPU_H__*/
