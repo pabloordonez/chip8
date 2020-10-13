@@ -3,20 +3,27 @@
 #define WIDTH 1024
 #define HEIGHT 720
 #define FPS 60
-#define ROM  "../roms/BRIX"
+#define ROM "../roms/BRIX"
 bool running = false;
+
+const i32 keys[16] = {
+    KEY_KP_1, KEY_KP_2, KEY_KP_3, KEY_KP_4, /* 1 row */
+    KEY_Q, KEY_W, KEY_E, KEY_R,             /* 2 row */
+    KEY_A, KEY_S, KEY_D, KEY_F,             /* 3 row */
+    KEY_Z, KEY_X, KEY_C, KEY_V,             /* 4 row */
+};
 
 void draw_instructions(char **instructions, const u32 instruction_count, const Cpu *cpu)
 {
-    const u32 width = 240;
-    const i32 sx = WIDTH - width;
+    const u32 width = 270;
+    const i32 sx = WIDTH - width + 30;
     const i32 sy = 10;
     const i32 font_size = 20;
     const u16 current_instruction_index = cpu_get_instruction_pointer_index(cpu);
     const u32 from = current_instruction_index < 5 ? 0 : current_instruction_index - 5;
     i32 y = sy + 10;
 
-    DrawRectangleLines(sx - 10, sy, width, HEIGHT - 20, (Color){0, 0, 0, 50});
+    DrawRectangleLines(sx - 40, sy, width, HEIGHT - 20, (Color){0, 0, 0, 50});
     DrawText("INSTRUCTIONS", sx, y, font_size, BLACK);
     y += font_size + 10;
 
@@ -37,7 +44,7 @@ void draw_instructions(char **instructions, const u32 instruction_count, const C
 
 void draw_cpu_state(Cpu *cpu)
 {
-    const i32 width = 750;
+    const i32 width = 720;
     const i32 height = 240;
     const i32 sx = 20;
     const i32 sy = HEIGHT - height;
@@ -110,35 +117,12 @@ void draw_cpu_state(Cpu *cpu)
     }
 }
 
-void check_input(Cpu *cpu)
-{
-    if (IsKeyPressed(KEY_F10) && !running)
-        cpu_clock(cpu);
-
-  if (IsKeyDown(KEY_F11) && !running)
-        cpu_clock(cpu);
-
-    if (IsKeyPressed(KEY_F5))
-        running = !running;
-
-    if (IsKeyPressed(KEY_F8))
-       cpu_load_rom(cpu, ROM);
-
-    if (running)
-    {
-        for (u8 i = 0; i < 10; i++)
-        {
-            cpu_clock(cpu);
-        }
-    }
-}
-
 void draw_gpu(Cpu *cpu)
 {
     const i32 sx = 10;
-    const i32 sy = 30;
-    const i32 w = 10;
-    const i32 h = 10;
+    const i32 sy = 40;
+    const i32 w = 11;
+    const i32 h = 13;
 
     for (u8 y = 0; y < GPU_SCREEN_HEIGHT; y++)
     {
@@ -146,7 +130,35 @@ void draw_gpu(Cpu *cpu)
         {
             u16 index = y * GPU_SCREEN_WIDTH + x;
             u8 value = cpu->gpu.memory[index];
-            DrawRectangle((x * (w + 1)) + sx, (y * (h + 1)) + sy, w, h, value == 0 ? WHITE : BLACK);
+            DrawRectangle((x * w) + sx, (y * h) + sy, w, h, value == 0 ? (Color){10, 50, 40, 255} : (Color){170, 255, 50, 255});
+        }
+    }
+}
+
+void check_input(Cpu *cpu)
+{
+    for (u8 ki = 0; ki < 16; ki++)
+    {
+        keyboard_set_key_pressed(&cpu->keyboard, ki, IsKeyDown(keys[ki]));
+    }
+
+    if (IsKeyPressed(KEY_F10) && !running)
+        cpu_clock(cpu);
+
+    if (IsKeyDown(KEY_F11) && !running)
+        cpu_clock(cpu);
+
+    if (IsKeyPressed(KEY_F5))
+        running = !running;
+
+    if (IsKeyPressed(KEY_F8))
+        cpu_load_rom(cpu, ROM);
+
+    if (running)
+    {
+        for (u8 i = 0; i < 10; i++)
+        {
+            cpu_clock(cpu);
         }
     }
 }

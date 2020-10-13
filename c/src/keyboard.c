@@ -29,3 +29,15 @@ i8 keyboard_get_key_pressed_index(const Keyboard *keyboard)
 
     return NOT_KEY_PRESSED;
 }
+
+void keyboard_set_key_pressed(Keyboard *keyboard, u8 key, bool pressed)
+{
+    if (pressed)
+    {
+        keyboard->memory |= (0x1 << key);
+    }
+    else
+    {
+        keyboard->memory &= ~(0x1 << key);
+    }
+}

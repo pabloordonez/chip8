@@ -22,4 +22,6 @@ bool keyboard_is_key_pressed(const Keyboard *keyboard, u8 key);
 
 i8 keyboard_get_key_pressed_index(const Keyboard *keyboard);
 
+void keyboard_set_key_pressed(Keyboard *keyboard, u8 key, bool pressed);
+
 #endif /* __KEYBOARD_H__ */
