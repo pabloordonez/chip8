@@ -93,6 +93,7 @@ static inline void execute_instruction_and_move_forward(Cpu *cpu);
 static inline bool overflow_add(u8 *result, u8 a, u8 b);
 static inline void move_program_counter_forward(Cpu *cpu);
 static inline void move_program_counter_backward(Cpu *cpu);
+static inline void move_program_counter(Cpu *cpu, u16 offset);
 static inline void op_sys_nnn(Cpu *cpu, u16 nnn);
 static inline void op_cls(Cpu *cpu);
 static inline void op_ret(Cpu *cpu);
@@ -134,9 +135,10 @@ void cpu_reset(Cpu *cpu)
     // initializes the memory.
     memset(cpu->memory, 0, sizeof(cpu->memory));
     memset(cpu->stack, 0, sizeof(cpu->stack));
+    memset(cpu->value_registers, 0, sizeof(cpu->value_registers));
 
     // sets the font sprites
-    memcpy(cpu->memory, FONT_SET, sizeof(FONT_SET));
+    memcpy(&cpu->memory, FONT_SET, sizeof(FONT_SET));
 
     cpu->program_counter = PROGRAM_START;
     cpu->stack_pointer = 0;
@@ -442,7 +444,7 @@ void cpu_disassemble_op(const Cpu *cpu, const u16 op_code, char *instruction)
         sprintf(instruction, "LD   V%X, [I]", op2);
 
     else
-        sprintf(instruction, "-- Unknown --");
+        sprintf(instruction, " ");
 }
 
 u32 cpu_disassemble_code(const Cpu *cpu, char ***instructions)
@@ -538,6 +540,11 @@ static inline void move_program_counter_backward(Cpu *cpu)
     cpu->program_counter -= 2;
 }
 
+static inline void move_program_counter(Cpu *cpu, u16 offset)
+{
+    cpu->program_counter = offset - 2;
+}
+
 static inline void op_sys_nnn(Cpu *cpu, u16 nnn)
 {
     cpu->program_counter = nnn;
@@ -556,19 +563,19 @@ static inline void op_ret(Cpu *cpu)
 
 static inline void op_jp_nnn(Cpu *cpu, u16 nnn)
 {
-    cpu->program_counter = nnn;
+    move_program_counter(cpu, nnn);
 }
 
 static inline void op_jp_v0_nnn(Cpu *cpu, u16 nnn)
 {
-    cpu->program_counter = nnn + (u16)cpu->value_registers[0];
+    move_program_counter(cpu, nnn + (u16)cpu->value_registers[0]);
 }
 
 static inline void op_call_nnn(Cpu *cpu, u16 nnn)
 {
     cpu->stack_pointer += 1;
     cpu->stack[cpu->stack_pointer] = cpu->program_counter;
-    cpu->program_counter = nnn;
+    move_program_counter(cpu, nnn);
 }
 
 static inline void op_se_vx_kk(Cpu *cpu, u8 x, u8 kk)
