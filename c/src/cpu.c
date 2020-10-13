@@ -88,9 +88,11 @@ const u8 FONT_SET[80] = {
     0x80,
 };
 
-static inline int overflow_add(u8 *result, u8 a, u8 b);
-static inline void cpu_move_program_counter_forward(Cpu *cpu);
-static inline void cpu_move_program_counter_backward(Cpu *cpu);
+static inline u16 get_op(const Cpu *cpu, u16 instruction_pointer);
+static inline void execute_instruction_and_move_forward(Cpu *cpu);
+static inline bool overflow_add(u8 *result, u8 a, u8 b);
+static inline void move_program_counter_forward(Cpu *cpu);
+static inline void move_program_counter_backward(Cpu *cpu);
 static inline void op_sys_nnn(Cpu *cpu, u16 nnn);
 static inline void op_cls(Cpu *cpu);
 static inline void op_ret(Cpu *cpu);
@@ -181,7 +183,7 @@ void cpu_load_rom(Cpu *cpu, const char *file_name)
     while (i < sizeof(cpu->memory) / 2)
     {
         memset(instruction, 0, sizeof(instruction));
-        u16 op_code = (cpu->memory[i] << 8) | cpu->memory[i + 1];
+        u16 op_code = get_op(cpu, i);
 
         if (op_code != 0)
         {
@@ -310,7 +312,22 @@ void cpu_execute_op(Cpu *cpu, const u16 op_code)
         op_ld_vx_i(cpu, op2);
 }
 
-void cpu_disassemble_op(Cpu *cpu, const u16 op_code, char *instruction)
+void cpu_clock(Cpu *cpu)
+{
+    execute_instruction_and_move_forward(cpu);
+
+    if (cpu->delay_timer > 0)
+    {
+        cpu->delay_timer--;
+    }
+
+    if (cpu->sound_timer > 0)
+    {
+        cpu->sound_timer--;
+    }
+}
+
+void cpu_disassemble_op(const Cpu *cpu, const u16 op_code, char *instruction)
 {
     u8 op1 = ((op_code & 0xF000) >> 12);
     u8 op2 = ((op_code & 0x0F00) >> 8);
@@ -428,25 +445,26 @@ void cpu_disassemble_op(Cpu *cpu, const u16 op_code, char *instruction)
         sprintf(instruction, "-- Unknown --");
 }
 
-u32 cpu_disassemble_code(Cpu *cpu, char ***instructions)
+u32 cpu_disassemble_code(const Cpu *cpu, char ***instructions)
 {
     u32 i = 0;
     u32 j = 0;
     u32 size = sizeof(cpu->memory);
     u32 instruction_count = (size - PROGRAM_START) / 2;
     u32 instruction_size = instruction_count * sizeof(char *);
+    char buffer[100];
     (*instructions) = malloc(instruction_size);
 
-    // disassemble the op_code
     while (j < instruction_count)
     {
-        u16 op_code = (cpu->memory[i + PROGRAM_START] << 8) | cpu->memory[i + PROGRAM_START + 1];
+        u16 op_code = get_op(cpu, i + PROGRAM_START);
 
         if (op_code != 0)
         {
             (*instructions)[j] = malloc(100);
-            memset((*instructions)[j], 0, 100);
-            cpu_disassemble_op(cpu, op_code, (*instructions)[j]);
+            memset(buffer, 0, 100);
+            cpu_disassemble_op(cpu, op_code, buffer);
+            sprintf((*instructions)[j], "[%X]: %s\n", i + PROGRAM_START, buffer);
         }
         else
         {
@@ -460,40 +478,60 @@ u32 cpu_disassemble_code(Cpu *cpu, char ***instructions)
     return instruction_count;
 }
 
-void cpu_free_disassembled_code(char*** instructions, u32 count)
+void cpu_free_disassembled_code(char ***instructions, u32 count)
 {
     for (u32 i = 0; i < count; i++)
     {
         if ((*instructions)[i] != NULL)
         {
             free((*instructions)[i]);
+            (*instructions)[i] = NULL;
         }
     }
 
     free((*instructions));
+    (*instructions) = NULL;
 }
 
-static inline int overflow_add(u8 *result, u8 a, u8 b)
+u16 cpu_get_instruction_pointer_index(const Cpu *cpu)
+{
+    return (cpu->program_counter - PROGRAM_START) / 2;
+}
+
+static inline u16 get_op(const Cpu *cpu, u16 instruction_pointer)
+{
+    return (cpu->memory[instruction_pointer] << 8) |
+           cpu->memory[instruction_pointer + 1];
+}
+
+static inline void execute_instruction_and_move_forward(Cpu *cpu)
+{
+    u16 op_code = get_op(cpu, cpu->program_counter);
+    cpu_execute_op(cpu, op_code);
+    move_program_counter_forward(cpu);
+}
+
+static inline bool overflow_add(u8 *result, u8 a, u8 b)
 {
     *result = a + b;
 
     if (a > 0 && b > 0 && *result < 0)
-        return 1;
+        return true;
 
     if (a < 0 && b < 0 && *result > 0)
-        return 1;
+        return true;
 
-    return 0;
+    return false;
 }
 
-static inline void cpu_move_program_counter_forward(Cpu *cpu)
+static inline void move_program_counter_forward(Cpu *cpu)
 {
     // we move two bytes ahead: each instruction is 2 bytes,
     // so we are moving one instruction ahead.
     cpu->program_counter += 2;
 }
 
-static inline void cpu_move_program_counter_backward(Cpu *cpu)
+static inline void move_program_counter_backward(Cpu *cpu)
 {
     // we move two bytes ahead: each instruction is 2 bytes,
     // so we are moving one instruction ahead.
@@ -537,7 +575,7 @@ static inline void op_se_vx_kk(Cpu *cpu, u8 x, u8 kk)
 {
     if (cpu->value_registers[x] == kk)
     {
-        cpu_move_program_counter_forward(cpu);
+        move_program_counter_forward(cpu);
     }
 }
 
@@ -545,7 +583,7 @@ static inline void op_se_vx_vy(Cpu *cpu, u8 x, u8 y)
 {
     if (cpu->value_registers[x] == cpu->value_registers[y])
     {
-        cpu_move_program_counter_forward(cpu);
+        move_program_counter_forward(cpu);
     }
 }
 
@@ -553,7 +591,7 @@ static inline void op_sne_vx_kk(Cpu *cpu, u8 x, u8 kk)
 {
     if (cpu->value_registers[x] != kk)
     {
-        cpu_move_program_counter_forward(cpu);
+        move_program_counter_forward(cpu);
     }
 }
 
@@ -561,7 +599,7 @@ static inline void op_sne_vx_vy(Cpu *cpu, u8 x, u8 y)
 {
     if (cpu->value_registers[x] != cpu->value_registers[y])
     {
-        cpu_move_program_counter_forward(cpu);
+        move_program_counter_forward(cpu);
     }
 }
 
@@ -569,7 +607,7 @@ static inline void op_skp_vx(Cpu *cpu, u8 x)
 {
     if (keyboard_is_key_pressed(&cpu->keyboard, cpu->value_registers[x]))
     {
-        cpu_move_program_counter_forward(cpu);
+        move_program_counter_forward(cpu);
     }
 }
 
@@ -577,7 +615,7 @@ static inline void op_skpn_vx(Cpu *cpu, u8 x)
 {
     if (!keyboard_is_key_pressed(&cpu->keyboard, cpu->value_registers[x]))
     {
-        cpu_move_program_counter_forward(cpu);
+        move_program_counter_forward(cpu);
     }
 }
 
@@ -645,7 +683,7 @@ void op_ld_vx_key(Cpu *cpu, u8 x)
 {
     if (!keyboard_is_any_key_pressed(&cpu->keyboard))
     {
-        cpu_move_program_counter_backward(cpu);
+        move_program_counter_backward(cpu);
         return;
     }
 

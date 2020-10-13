@@ -10,7 +10,7 @@ void gpu_clear_memory(Gpu *gpu)
     memset(gpu, 0, sizeof(Gpu));
 }
 
-bool gpu_draw_sprite(Gpu *gpu, u8 x, u8 y, u8 *memory, u8 from, u8 length)
+bool gpu_draw_sprite(Gpu *gpu, u8 x, u8 y, const u8 *memory, u8 from, u8 length)
 {
     return false;
 }

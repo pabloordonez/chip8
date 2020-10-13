@@ -16,10 +16,10 @@ typedef struct Keyboard
 
 void keyboard_reset(Keyboard *keyboard);
 
-bool keyboard_is_any_key_pressed(Keyboard *keyboard);
+bool keyboard_is_any_key_pressed(const Keyboard *keyboard);
 
-bool keyboard_is_key_pressed(Keyboard *keyboard, u8 key);
+bool keyboard_is_key_pressed(const Keyboard *keyboard, u8 key);
 
-i8 keyboard_get_key_pressed_index(Keyboard *keyboard);
+i8 keyboard_get_key_pressed_index(const Keyboard *keyboard);
 
 #endif /* __KEYBOARD_H__ */

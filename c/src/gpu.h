@@ -17,6 +17,6 @@ void gpu_reset(Gpu *gpu);
 
 void gpu_clear_memory(Gpu *gpu);
 
-bool gpu_draw_sprite(Gpu *gpu, u8 x, u8 y, u8 *memory, u8 from, u8 length);
+bool gpu_draw_sprite(Gpu *gpu, u8 x, u8 y, const u8 *memory, u8 from, u8 length);
 
 #endif /*__GPU_H__*/

@@ -33,10 +33,14 @@ void cpu_load_rom(Cpu* cpu, const char* file_name);
 
 void cpu_execute_op(Cpu* cpu, const u16 op_code);
 
-void cpu_disassemble_op(Cpu* cpu, const u16 op_code, char* instruction);
+void cpu_clock(Cpu* cpu);
 
-u32 cpu_disassemble_code(Cpu* cpu, char*** instructions);
+void cpu_disassemble_op(const Cpu* cpu, const u16 op_code, char* instruction);
+
+u32 cpu_disassemble_code(const Cpu* cpu, char*** instructions);
 
 void cpu_free_disassembled_code(char*** instructions, u32 count);
+
+u16 cpu_get_instruction_pointer_index(const Cpu* cpu);
 
 #endif /*__CPU_H__*/
