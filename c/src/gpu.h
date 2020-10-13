@@ -13,6 +13,8 @@ typedef struct Gpu
     u8 memory[256];
 } Gpu;
 
+void gpu_reset(Gpu *gpu);
+
 void gpu_clear_memory(Gpu *gpu);
 
 bool gpu_draw_sprite(Gpu *gpu, u8 x, u8 y, u8 *memory, u8 from, u8 length);

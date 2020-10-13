@@ -14,6 +14,8 @@ typedef struct Keyboard
 
 #define NOT_KEY_PRESSED -1
 
+void keyboard_reset(Keyboard *keyboard);
+
 bool keyboard_is_any_key_pressed(Keyboard *keyboard);
 
 bool keyboard_is_key_pressed(Keyboard *keyboard, u8 key);

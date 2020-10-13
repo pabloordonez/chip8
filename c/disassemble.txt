@@ -1,45 +1,67 @@
-LD   I, 2A2
-LD   V0, 60
-LD   V1, 61
-DRW  V0, VD, 0
-ADD  V0, 70
-LD   I, 2A2
-DRW  V0, VD, 0
-LD   I, 2A2
-ADD  V0, 70
-DRW  V0, VD, 0
-ADD  V0, 70
-LD   I, 2A2
-DRW  V0, VD, 0
-ADD  V0, 70
-LD   I, 2A2
-DRW  V0, VD, 0
-ADD  V0, 70
-LD   I, 2A2
-DRW  V0, VD, 0
-JMP  212
--- Unknown --
--- Unknown --
-SE   VC, 3C
-SE   VC, 3C
-SE   VC, 3C
-SE   VC, 3C
--- Unknown --
--- Unknown --
-LD   V0, V8
--- Unknown --
--- Unknown --
-LD   V0, V8
-LD   V0, V8
--- Unknown --
--- Unknown --
-LD   V0, V8
-SYS  303
-SYS  707
-SYS  F0F
-JMP  V0, FBF
--- Unknown --
--- Unknown --
--- Unknown --
-SNE  V3, 43
--- Unknown --
+200 [E0]: CLS
+202 [A22A]: LD   I, 22A
+204 [600C]: LD   V0, C
+206 [6108]: LD   V1, 8
+208 [D01F]: DRW  V0, V1, F
+20A [7009]: ADD  V0, 9
+20C [A239]: LD   I, 239
+20E [D01F]: DRW  V0, V1, F
+210 [A248]: LD   I, 248
+212 [7008]: ADD  V0, 8
+214 [D01F]: DRW  V0, V1, F
+216 [7004]: ADD  V0, 4
+218 [A257]: LD   I, 257
+21A [D01F]: DRW  V0, V1, F
+21C [7008]: ADD  V0, 8
+21E [A266]: LD   I, 266
+220 [D01F]: DRW  V0, V1, F
+222 [7008]: ADD  V0, 8
+224 [A275]: LD   I, 275
+226 [D01F]: DRW  V0, V1, F
+228 [1228]: JMP  228
+22A [FF00]: -- Unknown --
+22C [FF00]: -- Unknown --
+22E [3C00]: SE   VC, 0
+230 [3C00]: SE   VC, 0
+232 [3C00]: SE   VC, 0
+234 [3C00]: SE   VC, 0
+236 [FF00]: -- Unknown --
+238 [FFFF]: -- Unknown --
+23A [FF]: SYS  FF
+23C [38]: SYS  38
+23E [3F]: SYS  3F
+240 [3F]: SYS  3F
+242 [38]: SYS  38
+244 [FF]: SYS  FF
+246 [FF]: SYS  FF
+248 [8000]: LD   V0, V0
+24A [E000]: -- Unknown --
+24C [E000]: -- Unknown --
+24E [8000]: LD   V0, V0
+250 [8000]: LD   V0, V0
+252 [E000]: -- Unknown --
+254 [E000]: -- Unknown --
+256 [80F8]: -- Unknown --
+258 [FC]: SYS  FC
+25A [3E]: SYS  3E
+25C [3F]: SYS  3F
+25E [3B]: SYS  3B
+260 [39]: SYS  39
+262 [F8]: SYS  F8
+264 [F8]: SYS  F8
+266 [300]: SYS  300
+268 [700]: SYS  700
+26A [F00]: SYS  F00
+26C [BF00]: JMP  V0, F00
+26E [FB00]: -- Unknown --
+270 [F300]: -- Unknown --
+272 [E300]: -- Unknown --
+274 [43E0]: SNE  V3, E0
+276 [E0]: CLS
+278 [80]: SYS  80
+27A [80]: SYS  80
+27C [80]: SYS  80
+27E [80]: SYS  80
+280 [E0]: CLS
+282 [E0]: CLS
+284 [FF00]: -- Unknown --

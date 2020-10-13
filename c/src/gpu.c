@@ -1,5 +1,10 @@
 #include "gpu.h"
 
+void gpu_reset(Gpu *gpu)
+{
+    memset(gpu, 0, sizeof(gpu->memory));
+}
+
 void gpu_clear_memory(Gpu *gpu)
 {
     memset(gpu, 0, sizeof(Gpu));

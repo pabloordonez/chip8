@@ -1,5 +1,10 @@
 #include "keyboard.h"
 
+void keyboard_reset(Keyboard *keyboard)
+{
+    keyboard->memory = 0;
+}
+
 bool keyboard_is_any_key_pressed(Keyboard *keyboard)
 {
     return keyboard->memory != 0;

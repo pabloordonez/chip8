@@ -27,12 +27,16 @@ typedef struct Cpu
     Keyboard keyboard;
 } Cpu;
 
+void cpu_reset(Cpu *cpu);
 
-void cpu_load_rom(Cpu* cpu, char* file_name);
+void cpu_load_rom(Cpu* cpu, const char* file_name);
 
-void cpu_execute_op(Cpu* cpu, u16 op_code);
+void cpu_execute_op(Cpu* cpu, const u16 op_code);
 
-void cpu_disassemble_op(Cpu* cpu, u16 op_code, char* instruction);
+void cpu_disassemble_op(Cpu* cpu, const u16 op_code, char* instruction);
 
+u32 cpu_disassemble_code(Cpu* cpu, char*** instructions);
+
+void cpu_free_disassembled_code(char*** instructions, u32 count);
 
 #endif /*__CPU_H__*/
