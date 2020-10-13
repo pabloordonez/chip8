@@ -1,0 +1,45 @@
+LD   I, 2A2
+LD   V0, 60
+LD   V1, 61
+DRW  V0, VD, 0
+ADD  V0, 70
+LD   I, 2A2
+DRW  V0, VD, 0
+LD   I, 2A2
+ADD  V0, 70
+DRW  V0, VD, 0
+ADD  V0, 70
+LD   I, 2A2
+DRW  V0, VD, 0
+ADD  V0, 70
+LD   I, 2A2
+DRW  V0, VD, 0
+ADD  V0, 70
+LD   I, 2A2
+DRW  V0, VD, 0
+JMP  212
+-- Unknown --
+-- Unknown --
+SE   VC, 3C
+SE   VC, 3C
+SE   VC, 3C
+SE   VC, 3C
+-- Unknown --
+-- Unknown --
+LD   V0, V8
+-- Unknown --
+-- Unknown --
+LD   V0, V8
+LD   V0, V8
+-- Unknown --
+-- Unknown --
+LD   V0, V8
+SYS  303
+SYS  707
+SYS  F0F
+JMP  V0, FBF
+-- Unknown --
+-- Unknown --
+-- Unknown --
+SNE  V3, 43
+-- Unknown --
