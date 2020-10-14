@@ -25,7 +25,7 @@ And there are plenty other things I want to implement or test.
 
 ## Instruction Set
 Currently the application supports only the standard instruction set, with the standard memory addresses and screen resolution.
-Here's a list of all supported instructions (for a more in depth look at each instruction please read (here)[http://devernay.free.fr/hacks/chip8/C8TECH10.HTM]):
+Here's a list of all supported instructions (for a more in depth look at each instruction please read [here](http://devernay.free.fr/hacks/chip8/C8TECH10.HTM)):
 
 ```
 00E0 - CLS
