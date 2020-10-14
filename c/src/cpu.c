@@ -493,8 +493,8 @@ static inline void op_cls(Cpu *cpu)
 
 static inline void op_ret(Cpu *cpu)
 {
-    cpu->program_counter = cpu->stack[cpu->stack_pointer];
     cpu->stack_pointer -= 1;
+    cpu->program_counter = cpu->stack[cpu->stack_pointer];
 }
 
 static inline void op_jp_nnn(Cpu *cpu, u16 nnn)
@@ -509,8 +509,8 @@ static inline void op_jp_v0_nnn(Cpu *cpu, u16 nnn)
 
 static inline void op_call_nnn(Cpu *cpu, u16 nnn)
 {
-    cpu->stack_pointer += 1;
     cpu->stack[cpu->stack_pointer] = cpu->program_counter;
+    cpu->stack_pointer += 1;
     move_program_counter(cpu, nnn);
 }
 
@@ -612,14 +612,12 @@ static inline void op_ld_b_vx(Cpu *cpu, u8 x)
 
 static inline void op_ld_i_vx(Cpu *cpu, u8 x)
 {
-    u16 i = cpu->index_register;
-    memcpy(&cpu->memory[i], &cpu->value_registers[0], x);
+    memcpy(&cpu->memory[cpu->index_register], cpu->value_registers, x + 1);
 }
 
 static inline void op_ld_vx_i(Cpu *cpu, u8 x)
 {
-    u16 i = cpu->index_register;
-    memcpy(&cpu->value_registers[0], &cpu->memory[i], x);
+    memcpy(cpu->value_registers, &cpu->memory[cpu->index_register], x + 1);
 }
 
 void op_ld_vx_key(Cpu *cpu, u8 x)
@@ -697,7 +695,7 @@ static inline void op_shr_vx(Cpu *cpu, u8 x)
 static inline void op_shl_vx(Cpu *cpu, u8 x)
 {
     cpu->value_registers[0x0F] = cpu->value_registers[x] & 0x80;
-    cpu->value_registers[x] >>= 1;
+    cpu->value_registers[x] <<= 1;
 }
 
 static inline void op_rnd_vx_kk(Cpu *cpu, u8 x, u8 kk)
