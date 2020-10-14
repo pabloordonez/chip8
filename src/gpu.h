@@ -17,9 +17,9 @@ typedef struct Gpu
     u8 memory[GPU_SCREEN_WIDTH * GPU_SCREEN_HEIGHT];
 } Gpu;
 
-inline u8 gpu_get_pixel(Gpu *gpu, u8 x, u8 y);
+u8 gpu_get_pixel(Gpu *gpu, u8 x, u8 y);
 
-inline void gpu_set_pixel(Gpu *gpu, u8 x, u8 y, u8 value);
+void gpu_set_pixel(Gpu *gpu, u8 x, u8 y, u8 value);
 
 void gpu_reset(Gpu *gpu);
 

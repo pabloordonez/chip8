@@ -3,7 +3,7 @@
 #define WIDTH 1024
 #define HEIGHT 720
 #define FPS 60
-#define ROM "../roms/INVADERS"
+#define ROM "roms/INVADERS"
 bool running = false;
 
 const i32 keys[16] = {
