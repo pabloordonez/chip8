@@ -1,11 +1,11 @@
 #include "gpu.h"
 
-inline static int get_pixel(Gpu *gpu, u8 x, u8 y)
+u8 gpu_get_pixel(Gpu *gpu, u8 x, u8 y)
 {
     return gpu->memory[y * GPU_SCREEN_WIDTH + x];
 }
 
-inline static void set_pixel(Gpu *gpu, u8 x, u8 y, u8 value)
+void gpu_set_pixel(Gpu *gpu, u8 x, u8 y, u8 value)
 {
     gpu->memory[y * GPU_SCREEN_WIDTH + x] = value;
 }
@@ -28,10 +28,10 @@ bool gpu_draw_sprite(Gpu *gpu, u8 x, u8 y, const u8 *memory, u16 index_from, u8 
 
             u8 px = (x + bit) % GPU_SCREEN_WIDTH;
             u8 py = (y + rows) % GPU_SCREEN_HEIGHT;
-            u8 old_value = get_pixel(gpu, px, py);
+            u8 old_value = gpu_get_pixel(gpu, px, py);
 
             collision = collision || (old_value == 1 && new_value == 1);
-            set_pixel(gpu, px, py, old_value ^ new_value);
+            gpu_set_pixel(gpu, px, py, old_value ^ new_value);
         }
     }
 

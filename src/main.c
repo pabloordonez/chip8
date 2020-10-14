@@ -3,7 +3,7 @@
 #define WIDTH 1024
 #define HEIGHT 720
 #define FPS 60
-#define ROM "../roms/15PUZZLE"
+#define ROM "../roms/INVADERS"
 bool running = false;
 
 const i32 keys[16] = {
@@ -128,8 +128,7 @@ void draw_gpu(Cpu *cpu)
     {
         for (u8 x = 0; x < GPU_SCREEN_WIDTH; x++)
         {
-            u16 index = y * GPU_SCREEN_WIDTH + x;
-            u8 value = cpu->gpu.memory[index];
+            u8 value = gpu_get_pixel(&cpu->gpu, x, y);
             DrawRectangle((x * w) + sx, (y * h) + sy, w, h, value == 0 ? (Color){10, 50, 40, 255} : (Color){170, 255, 50, 255});
         }
     }
